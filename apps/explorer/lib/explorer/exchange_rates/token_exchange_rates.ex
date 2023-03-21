@@ -9,7 +9,6 @@ defmodule Explorer.ExchangeRates.TokenExchangeRates do
   alias Explorer.ExchangeRates.Source
   alias Explorer.{Chain.Token, Repo}
 
-  @batch_size 150
   @interval :timer.seconds(5)
   @refetch_interval :timer.hours(1)
 
@@ -27,7 +26,7 @@ defmodule Explorer.ExchangeRates.TokenExchangeRates do
   def init(_args) do
     if Application.get_env(:explorer, __MODULE__)[:enabled] do
       state = %__MODULE__{
-        max_batch_size: Application.get_env(:explorer, __MODULE__)[:max_batch_size] || @batch_size,
+        max_batch_size: Application.get_env(:explorer, __MODULE__)[:max_batch_size],
         interval: Application.get_env(:explorer, __MODULE__)[:interval] || @interval,
         refetch_interval: Application.get_env(:explorer, __MODULE__)[:refetch_interval] || @refetch_interval
       }

@@ -24,6 +24,7 @@
 
 ### Chore
 
+- [#7119](https://github.com/blockscout/blockscout/pull/7119) - Refactor runtime config
 - [#7072](https://github.com/blockscout/blockscout/pull/7072) - Add a separate docker compose for geth with clique consensus
 - [#7056](https://github.com/blockscout/blockscout/pull/7056) - Add path_helper in interact.js
 - [#7040](https://github.com/blockscout/blockscout/pull/7040) - Use alias BlockScoutWeb.Cldr.Number
