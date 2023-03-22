@@ -209,7 +209,7 @@ defmodule Indexer.Block.Catchup.MissingRangesCollector do
   end
 
   defp missing_ranges_batch_size do
-    Application.get_env(:indexer, :missing_ranges_batch_size) || @default_missing_ranges_batch_size
+    Application.get_env(:indexer, __MODULE__)[:batch_size] || @default_missing_ranges_batch_size
   end
 
   def parse_block_ranges(block_ranges_string) do

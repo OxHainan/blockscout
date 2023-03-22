@@ -1,88 +1,19 @@
 import Config
 
-import Bitwise
-
 [__DIR__ | ~w(config_helper.exs)]
 |> Path.join()
 |> Code.eval_file()
 
-indexer_memory_limit_default = 1
-
-indexer_memory_limit =
-  "INDEXER_MEMORY_LIMIT"
-  |> System.get_env(to_string(indexer_memory_limit_default))
-  |> String.downcase()
-  |> Integer.parse()
-  |> case do
-    {integer, g} when g in ["g", "gb", ""] -> integer <<< 30
-    {integer, m} when m in ["m", "mb"] -> integer <<< 20
-    _ -> indexer_memory_limit_default <<< 30
-  end
-
-config :indexer,
-  memory_limit: indexer_memory_limit
-
-config :indexer, Indexer.Fetcher.EmptyBlocksSanitizer,
-  batch_size: ConfigHelper.parse_integer_env_var("INDEXER_EMPTY_BLOCKS_SANITIZER_BATCH_SIZE", 100)
-
 ######################
 ### BlockScout Web ###
 ######################
-
-network_path =
-  "NETWORK_PATH"
-  |> System.get_env("/")
-  |> (&(if String.ends_with?(&1, "/") do
-          String.trim_trailing(&1, "/")
-        else
-          &1
-        end)).()
-
-# Configures the endpoint
-config :block_scout_web, BlockScoutWeb.Endpoint,
-  url: [
-    path: network_path
-  ],
-  render_errors: [view: BlockScoutWeb.ErrorView, accepts: ~w(html json)],
-  pubsub_server: BlockScoutWeb.PubSub
-
-config :block_scout_web, :footer,
-  chat_link: System.get_env("FOOTER_CHAT_LINK", "https://discord.gg/blockscout"),
-  forum_link: System.get_env("FOOTER_FORUM_LINK", "https://forum.poa.network/c/blockscout"),
-  github_link: System.get_env("FOOTER_GITHUB_LINK", "https://github.com/blockscout/blockscout"),
-  enable_forum_link: ConfigHelper.parse_bool_env_var("FOOTER_ENABLE_FORUM_LINK")
-
-# Configures Ueberauth's Auth0 auth provider
-config :ueberauth, Ueberauth.Strategy.Auth0.OAuth,
-  domain: System.get_env("ACCOUNT_AUTH0_DOMAIN"),
-  client_id: System.get_env("ACCOUNT_AUTH0_CLIENT_ID"),
-  client_secret: System.get_env("ACCOUNT_AUTH0_CLIENT_SECRET")
-
-# Configures Ueberauth local settings
-config :ueberauth, Ueberauth,
-  logout_url: System.get_env("ACCOUNT_AUTH0_LOGOUT_URL"),
-  logout_return_to_url: System.get_env("ACCOUNT_AUTH0_LOGOUT_RETURN_URL")
 
 config :block_scout_web,
   version: System.get_env("BLOCKSCOUT_VERSION"),
   release_link: System.get_env("RELEASE_LINK"),
   decompiled_smart_contract_token: System.get_env("DECOMPILED_SMART_CONTRACT_TOKEN"),
   show_percentage: ConfigHelper.parse_bool_env_var("SHOW_ADDRESS_MARKETCAP_PERCENTAGE", "true"),
-  checksum_address_hashes: ConfigHelper.parse_bool_env_var("CHECKSUM_ADDRESS_HASHES", "true")
-
-config :block_scout_web, BlockScoutWeb.Chain,
-  network: System.get_env("NETWORK"),
-  subnetwork: System.get_env("SUBNETWORK"),
-  network_icon: System.get_env("NETWORK_ICON"),
-  logo: System.get_env("LOGO"),
-  logo_footer: System.get_env("LOGO_FOOTER"),
-  logo_text: System.get_env("LOGO_TEXT"),
-  has_emission_funds: false,
-  show_maintenance_alert: ConfigHelper.parse_bool_env_var("SHOW_MAINTENANCE_ALERT"),
-  enable_testnet_label: ConfigHelper.parse_bool_env_var("SHOW_TESTNET_LABEL"),
-  testnet_label_text: System.get_env("TESTNET_LABEL_TEXT", "Testnet")
-
-config :block_scout_web,
+  checksum_address_hashes: ConfigHelper.parse_bool_env_var("CHECKSUM_ADDRESS_HASHES", "true"),
   link_to_other_explorers: ConfigHelper.parse_bool_env_var("LINK_TO_OTHER_EXPLORERS"),
   other_explorers: System.get_env("OTHER_EXPLORERS"),
   other_networks: System.get_env("SUPPORTED_CHAINS"),
@@ -104,6 +35,44 @@ config :block_scout_web,
   permanent_dark_mode_enabled: ConfigHelper.parse_bool_env_var("DISABLE_ADD_TO_MM_BUTTON"),
   permanent_light_mode_enabled: ConfigHelper.parse_bool_env_var("PERMANENT_LIGHT_MODE_ENABLED")
 
+network_path =
+  "NETWORK_PATH"
+  |> System.get_env("/")
+  |> (&(if String.ends_with?(&1, "/") do
+          String.trim_trailing(&1, "/")
+        else
+          &1
+        end)).()
+
+# Configures the endpoint
+config :block_scout_web, BlockScoutWeb.Endpoint,
+  server: true,
+  url: [
+    path: network_path,
+    scheme: System.get_env("BLOCKSCOUT_PROTOCOL") || "http",
+    host: System.get_env("BLOCKSCOUT_HOST") || "localhost"
+  ],
+  render_errors: [view: BlockScoutWeb.ErrorView, accepts: ~w(html json)],
+  pubsub_server: BlockScoutWeb.PubSub
+
+config :block_scout_web, BlockScoutWeb.Chain,
+  network: System.get_env("NETWORK"),
+  subnetwork: System.get_env("SUBNETWORK"),
+  network_icon: System.get_env("NETWORK_ICON"),
+  logo: System.get_env("LOGO"),
+  logo_footer: System.get_env("LOGO_FOOTER"),
+  logo_text: System.get_env("LOGO_TEXT"),
+  has_emission_funds: false,
+  show_maintenance_alert: ConfigHelper.parse_bool_env_var("SHOW_MAINTENANCE_ALERT"),
+  enable_testnet_label: ConfigHelper.parse_bool_env_var("SHOW_TESTNET_LABEL"),
+  testnet_label_text: System.get_env("TESTNET_LABEL_TEXT", "Testnet")
+
+config :block_scout_web, :footer,
+  chat_link: System.get_env("FOOTER_CHAT_LINK", "https://discord.gg/blockscout"),
+  forum_link: System.get_env("FOOTER_FORUM_LINK", "https://forum.poa.network/c/blockscout"),
+  github_link: System.get_env("FOOTER_GITHUB_LINK", "https://github.com/blockscout/blockscout"),
+  enable_forum_link: ConfigHelper.parse_bool_env_var("FOOTER_ENABLE_FORUM_LINK")
+
 config :block_scout_web, :contract,
   verification_max_libraries: ConfigHelper.parse_integer_env_var("CONTRACT_VERIFICATION_MAX_LIBRARIES", 10),
   max_length_to_show_string_without_trimming: System.get_env("CONTRACT_MAX_STRING_LENGTH_WITHOUT_TRIMMING", "2040"),
@@ -118,13 +87,6 @@ config :block_scout_web, :api_rate_limit,
   limit_by_ip: ConfigHelper.parse_integer_env_var("API_RATE_LIMIT_BY_IP", default_api_rate_limit),
   static_api_key: System.get_env("API_RATE_LIMIT_STATIC_API_KEY", nil),
   whitelisted_ips: System.get_env("API_RATE_LIMIT_WHITELISTED_IPS", nil)
-
-config :block_scout_web, BlockScoutWeb.Endpoint,
-  server: true,
-  url: [
-    scheme: System.get_env("BLOCKSCOUT_PROTOCOL") || "http",
-    host: System.get_env("BLOCKSCOUT_HOST") || "localhost"
-  ]
 
 # Configures History
 price_chart_config =
@@ -152,6 +114,17 @@ config :block_scout_web, BlockScoutWeb.API.V2, enabled: ConfigHelper.parse_bool_
 config :block_scout_web, :account,
   authenticate_endpoint_api_key: System.get_env("ACCOUNT_AUTHENTICATE_ENDPOINT_API_KEY")
 
+# Configures Ueberauth's Auth0 auth provider
+config :ueberauth, Ueberauth.Strategy.Auth0.OAuth,
+  domain: System.get_env("ACCOUNT_AUTH0_DOMAIN"),
+  client_id: System.get_env("ACCOUNT_AUTH0_CLIENT_ID"),
+  client_secret: System.get_env("ACCOUNT_AUTH0_CLIENT_SECRET")
+
+# Configures Ueberauth local settings
+config :ueberauth, Ueberauth,
+  logout_url: System.get_env("ACCOUNT_AUTH0_LOGOUT_URL"),
+  logout_return_to_url: System.get_env("ACCOUNT_AUTH0_LOGOUT_RETURN_URL")
+
 ########################
 ### Ethereum JSONRPC ###
 ########################
@@ -161,10 +134,8 @@ config :ethereum_jsonrpc,
   ipc_path: System.get_env("IPC_PATH"),
   disable_archive_balances?: ConfigHelper.parse_bool_env_var("ETHEREUM_JSONRPC_DISABLE_ARCHIVE_BALANCES")
 
-debug_trace_transaction_timeout = System.get_env("ETHEREUM_JSONRPC_DEBUG_TRACE_TRANSACTION_TIMEOUT", "5s")
-
 config :ethereum_jsonrpc, EthereumJSONRPC.Geth,
-  debug_trace_transaction_timeout: debug_trace_transaction_timeout,
+  debug_trace_transaction_timeout: System.get_env("ETHEREUM_JSONRPC_DEBUG_TRACE_TRANSACTION_TIMEOUT", "5s"),
   tracer: System.get_env("INDEXER_INTERNAL_TRANSACTIONS_TRACER_TYPE", "call_tracer")
 
 config :ethereum_jsonrpc, EthereumJSONRPC.PendingTransaction,
@@ -195,7 +166,8 @@ config :explorer,
   fallback_ttl_cached_implementation_data_of_proxy: :timer.seconds(4),
   implementation_data_fetching_timeout: :timer.seconds(2),
   restricted_list: System.get_env("RESTRICTED_LIST", nil),
-  restricted_list_key: System.get_env("RESTRICTED_LIST_KEY", nil)
+  restricted_list_key: System.get_env("RESTRICTED_LIST_KEY", nil),
+  checksum_function: System.get_env("CHECKSUM_FUNCTION") && String.to_atom(System.get_env("CHECKSUM_FUNCTION"))
 
 config :explorer, Explorer.Chain.Events.Listener,
   enabled:
@@ -229,14 +201,7 @@ config :explorer, Explorer.ExchangeRates,
   enabled: !ConfigHelper.parse_bool_env_var("DISABLE_EXCHANGE_RATES"),
   fetch_btc_value: ConfigHelper.parse_bool_env_var("EXCHANGE_RATES_FETCH_BTC_VALUE")
 
-exchange_rates_source =
-  cond do
-    System.get_env("EXCHANGE_RATES_SOURCE") == "coin_gecko" -> Explorer.ExchangeRates.Source.CoinGecko
-    System.get_env("EXCHANGE_RATES_SOURCE") == "coin_market_cap" -> Explorer.ExchangeRates.Source.CoinMarketCap
-    true -> Explorer.ExchangeRates.Source.CoinGecko
-  end
-
-config :explorer, Explorer.ExchangeRates.Source, source: exchange_rates_source
+config :explorer, Explorer.ExchangeRates.Source, source: ConfigHelper.exchange_rates_source()
 
 config :explorer, Explorer.ExchangeRates.Source.CoinMarketCap,
   api_key: System.get_env("EXCHANGE_RATES_COINMARKETCAP_API_KEY")
@@ -248,15 +213,15 @@ config :explorer, Explorer.ExchangeRates.Source.CoinGecko,
 
 config :explorer, Explorer.ExchangeRates.TokenExchangeRates,
   enabled: !ConfigHelper.parse_bool_env_var("DISABLE_TOKEN_EXCHANGE_RATE", "true"),
-  interval: parse_time_env_var("TOKEN_EXCHANGE_RATE_INTERVAL", nil),
-  refetch_interval: parse_time_env_var("TOKEN_EXCHANGE_RATE_REFETCH_INTERVAL", nil),
+  interval: ConfigHelper.parse_time_env_var("TOKEN_EXCHANGE_RATE_INTERVAL", nil),
+  refetch_interval: ConfigHelper.parse_time_env_var("TOKEN_EXCHANGE_RATE_REFETCH_INTERVAL", nil),
   max_batch_size: ConfigHelper.parse_integer_env_var("TOKEN_EXCHANGE_RATE_MAX_BATCH_SIZE", 150)
 
 config :explorer, Explorer.Market.History.Cataloger, enabled: !disable_indexer?
 
 config :explorer, Explorer.Chain.Transaction.History.Historian,
   enabled: ConfigHelper.parse_bool_env_var("ENABLE_TXS_STATS", "true"),
-  init_lag: ConfigHelper.parse_time_env_var("TXS_HISTORIAN_INIT_LAG", 0),
+  init_lag_milliseconds: ConfigHelper.parse_time_env_var("TXS_HISTORIAN_INIT_LAG", 0),
   days_to_compile_at_init: ConfigHelper.parse_integer_env_var("TXS_STATS_DAYS_TO_COMPILE_AT_INIT", 40)
 
 config :explorer, Explorer.History.Process,
@@ -283,9 +248,6 @@ case System.get_env("SUPPLY_MODULE") do
   _ ->
     :ok
 end
-
-config :explorer,
-  checksum_function: System.get_env("CHECKSUM_FUNCTION") && String.to_atom(System.get_env("CHECKSUM_FUNCTION"))
 
 config :explorer, Explorer.Chain.Cache.BlockNumber,
   ttl_check_interval: ConfigHelper.cache_ttl_check_interval(disable_indexer?),
@@ -356,39 +318,20 @@ config :explorer, Explorer.Chain.Cache.MinMissingBlockNumber,
 ### Indexer ###
 ###############
 
-block_transformers = %{
-  "clique" => Indexer.Transform.Blocks.Clique,
-  "base" => Indexer.Transform.Blocks.Base
-}
-
-# Compile time environment variable access requires recompilation.
-configured_transformer = System.get_env("BLOCK_TRANSFORMER") || "base"
-
-block_transformer =
-  case Map.get(block_transformers, configured_transformer) do
-    nil ->
-      raise """
-      No such block transformer: #{configured_transformer}.
-
-      Valid values are:
-      #{Enum.join(Map.keys(block_transformers), "\n")}
-
-      Please update environment variable BLOCK_TRANSFORMER accordingly.
-      """
-
-    transformer ->
-      transformer
-  end
-
 config :indexer,
-  block_transformer: block_transformer,
-  metadata_updater_seconds_interval: ConfigHelper.parse_time_env_var("TOKEN_METADATA_UPDATE_INTERVAL", "48h"),
+  block_transformer: ConfigHelper.block_transformer(),
+  metadata_updater_milliseconds_interval: ConfigHelper.parse_time_env_var("TOKEN_METADATA_UPDATE_INTERVAL", "48h"),
   block_ranges: System.get_env("BLOCK_RANGES"),
   first_block: System.get_env("FIRST_BLOCK") || "",
   last_block: System.get_env("LAST_BLOCK") || "",
   trace_first_block: System.get_env("TRACE_FIRST_BLOCK") || "",
   trace_last_block: System.get_env("TRACE_LAST_BLOCK") || "",
-  fetch_rewards_way: System.get_env("FETCH_REWARDS_WAY", "trace_block")
+  fetch_rewards_way: System.get_env("FETCH_REWARDS_WAY", "trace_block"),
+  memory_limit: ConfigHelper.indexer_memory_limit(),
+  receipts_batch_size: ConfigHelper.parse_integer_env_var("INDEXER_RECEIPTS_BATCH_SIZE", 250),
+  receipts_concurrency: ConfigHelper.parse_integer_env_var("INDEXER_RECEIPTS_CONCURRENCY", 10)
+
+config :indexer, Indexer.Supervisor, enabled: !ConfigHelper.parse_bool_env_var("DISABLE_INDEXER")
 
 config :indexer, Indexer.Fetcher.TransactionAction.Supervisor,
   enabled: ConfigHelper.parse_bool_env_var("INDEXER_TX_ACTIONS_ENABLE")
@@ -400,10 +343,6 @@ config :indexer, Indexer.Fetcher.TransactionAction,
 
 config :indexer, Indexer.Transform.TransactionActions,
   max_token_cache_size: System.get_env("INDEXER_TX_ACTIONS_MAX_TOKEN_CACHE_SIZE")
-
-config :indexer,
-  receipts_batch_size: ConfigHelper.parse_integer_env_var("INDEXER_RECEIPTS_BATCH_SIZE", 250),
-  receipts_concurrency: ConfigHelper.parse_integer_env_var("INDEXER_RECEIPTS_CONCURRENCY", 10)
 
 config :indexer, Indexer.Fetcher.PendingTransaction.Supervisor,
   disabled?:
@@ -433,20 +372,21 @@ config :indexer, Indexer.Fetcher.TokenUpdater.Supervisor,
 config :indexer, Indexer.Fetcher.EmptyBlocksSanitizer.Supervisor,
   disabled?: ConfigHelper.parse_bool_env_var("INDEXER_DISABLE_CATALOGED_TOKEN_UPDATER_FETCHER")
 
-config :indexer, Indexer.Supervisor, enabled: !ConfigHelper.parse_bool_env_var("DISABLE_INDEXER")
-
 config :indexer, Indexer.Block.Realtime.Supervisor,
   enabled: !ConfigHelper.parse_bool_env_var("DISABLE_REALTIME_INDEXER")
 
 config :indexer, Indexer.Fetcher.TokenInstance.Supervisor,
   disabled?: ConfigHelper.parse_bool_env_var("DISABLE_TOKEN_INSTANCE_FETCHER")
 
+config :indexer, Indexer.Fetcher.EmptyBlocksSanitizer,
+  batch_size: ConfigHelper.parse_integer_env_var("INDEXER_EMPTY_BLOCKS_SANITIZER_BATCH_SIZE", 100)
+
+config :indexer, Indexer.Block.Catchup.MissingRangesCollector,
+  batch_size: ConfigHelper.parse_integer_env_var("INDEXER_CATCHUP_MISSING_RANGES_BATCH_SIZE", 100_000)
+
 config :indexer, Indexer.Block.Catchup.Fetcher,
   batch_size: ConfigHelper.parse_integer_env_var("INDEXER_CATCHUP_BLOCKS_BATCH_SIZE", 10),
   concurrency: ConfigHelper.parse_integer_env_var("INDEXER_CATCHUP_BLOCKS_CONCURRENCY", 10)
-
-config :indexer, Indexer.Block.Catchup.MissingRangesCollector,
-  missing_ranges_batch_size: ConfigHelper.parse_integer_env_var("INDEXER_CATCHUP_MISSING_RANGES_BATCH_SIZE", 100_000)
 
 config :indexer, Indexer.Fetcher.BlockReward,
   batch_size: ConfigHelper.parse_integer_env_var("INDEXER_BLOCK_REWARD_BATCH_SIZE", 10),
