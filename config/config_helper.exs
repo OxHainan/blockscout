@@ -1,6 +1,9 @@
 defmodule ConfigHelper do
   import Bitwise
+  alias Explorer.ExchangeRates.Source
+  alias Indexer.Transform.Blocks
 
+  @spec hackney_options() :: any()
   def hackney_options() do
     basic_auth_user = System.get_env("ETHEREUM_JSONRPC_USER", "")
     basic_auth_pass = System.get_env("ETHEREUM_JSONRPC_PASSWORD", nil)
@@ -13,6 +16,7 @@ defmodule ConfigHelper do
         )).()
   end
 
+  @spec timeout(non_neg_integer()) :: non_neg_integer()
   def timeout(default_minutes \\ 1) do
     case Integer.parse(System.get_env("ETHEREUM_JSONRPC_HTTP_TIMEOUT", "#{default_minutes * 60}")) do
       {seconds, ""} -> seconds
@@ -21,37 +25,43 @@ defmodule ConfigHelper do
     |> :timer.seconds()
   end
 
+  @spec parse_integer_env_var(String.t(), String.t()) :: non_neg_integer()
   def parse_integer_env_var(env_var, default_value) do
     env_var
     |> System.get_env(to_string(default_value))
     |> Integer.parse()
     |> case do
-      {integer, ""} -> integer
-      _ -> default_value
+      {integer, _} -> integer
+      _ -> 0
     end
   end
 
+  @spec parse_time_env_var(String.t(), String.t() | nil) :: non_neg_integer()
   def parse_time_env_var(env_var, default_value) do
     case env_var |> System.get_env(default_value || "") |> to_string() |> String.downcase() |> Integer.parse() do
       {milliseconds, "ms"} -> milliseconds
       {hours, "h"} -> :timer.hours(hours)
       {minutes, "m"} -> :timer.minutes(minutes)
       {seconds, s} when s in ["s", ""] -> :timer.seconds(seconds)
-      _ -> if not is_nil(default_value), do: :timer.seconds(default_value), else: default_value
+      _ -> 0
     end
   end
 
+  @spec parse_bool_env_var(String.t(), String.t()) :: boolean()
   def parse_bool_env_var(env_var, default_value \\ "false"),
     do: String.downcase(System.get_env(env_var, default_value)) == "true"
 
+  @spec cache_ttl_check_interval(boolean()) :: non_neg_integer() | false
   def cache_ttl_check_interval(disable_indexer?) do
     if(disable_indexer?, do: :timer.seconds(1), else: false)
   end
 
+  @spec cache_global_ttl(boolean()) :: non_neg_integer()
   def cache_global_ttl(disable_indexer?) do
     if(disable_indexer?, do: :timer.seconds(5))
   end
 
+  @spec indexer_memory_limit() :: integer()
   def indexer_memory_limit do
     indexer_memory_limit_default = 1
 
@@ -66,18 +76,19 @@ defmodule ConfigHelper do
     end
   end
 
+  @spec exchange_rates_source() :: Source.CoinGecko | Source.CoinMarketCap
   def exchange_rates_source do
     cond do
-      System.get_env("EXCHANGE_RATES_SOURCE") == "coin_gecko" -> Explorer.ExchangeRates.Source.CoinGecko
-      System.get_env("EXCHANGE_RATES_SOURCE") == "coin_market_cap" -> Explorer.ExchangeRates.Source.CoinMarketCap
-      true -> Explorer.ExchangeRates.Source.CoinGecko
+      System.get_env("EXCHANGE_RATES_SOURCE") == "coin_gecko" -> Source.CoinGecko
+      System.get_env("EXCHANGE_RATES_SOURCE") == "coin_market_cap" -> Source.CoinMarketCap
+      true -> Source.CoinGecko
     end
   end
 
   def block_transformer do
     block_transformers = %{
-      "clique" => Indexer.Transform.Blocks.Clique,
-      "base" => Indexer.Transform.Blocks.Base
+      "clique" => Blocks.Clique,
+      "base" => Blocks.Base
     }
 
     # Compile time environment variable access requires recompilation.

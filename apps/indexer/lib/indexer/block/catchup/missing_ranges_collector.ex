@@ -7,6 +7,7 @@ defmodule Indexer.Block.Catchup.MissingRangesCollector do
 
   alias Explorer.{Chain, Repo}
   alias Explorer.Chain.Cache.BlockNumber
+  alias Explorer.Helper, as: ExplorerHelper
   alias Explorer.Utility.MissingBlockRange
   alias Indexer.Block.Catchup.Helper
 
@@ -219,7 +220,7 @@ defmodule Indexer.Block.Catchup.MissingRangesCollector do
       |> Enum.map(fn string_range ->
         case String.split(string_range, "..") do
           [from_string, "latest"] ->
-            parse_integer(from_string)
+            ExplorerHelper.parse_integer(from_string)
 
           [from_string, to_string] ->
             with {from, ""} <- Integer.parse(from_string),
@@ -244,13 +245,6 @@ defmodule Indexer.Block.Catchup.MissingRangesCollector do
 
       num ->
         {:infinite_ranges, List.delete_at(ranges, -1), num - 1}
-    end
-  end
-
-  defp parse_integer(integer_string) do
-    case Integer.parse(integer_string) do
-      {integer, ""} -> integer
-      _ -> nil
     end
   end
 end

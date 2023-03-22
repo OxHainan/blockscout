@@ -39,7 +39,7 @@ defmodule Explorer.Counters.AverageBlockTime do
   ## Server
   @impl true
   def init(_) do
-    refresh_period = average_block_cache_period()
+    refresh_period = Application.get_env(:explorer, __MODULE__)[:cache_period]
     Process.send_after(self(), :refresh_timestamps, refresh_period)
 
     {:ok, refresh_timestamps()}
@@ -127,12 +127,5 @@ defmodule Explorer.Counters.AverageBlockTime do
       end
     end)
     |> elem(0)
-  end
-
-  defp average_block_cache_period do
-    case Integer.parse(System.get_env("CACHE_AVERAGE_BLOCK_PERIOD", "")) do
-      {secs, ""} -> :timer.seconds(secs)
-      _ -> :timer.minutes(30)
-    end
   end
 end

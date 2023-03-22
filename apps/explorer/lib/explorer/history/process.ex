@@ -10,7 +10,7 @@ defmodule Explorer.History.Process do
 
   @impl GenServer
   def init([:ok, historian]) do
-    init_lag_milliseconds = Application.get_env(:explorer, historian, [])[:init_lag_milliseconds]
+    init_lag_milliseconds = Application.get_env(:explorer, historian, [])[:init_lag_milliseconds] || 0
 
     days_to_compile =
       case Application.get_env(:explorer, historian, [])[:days_to_compile_at_init] do

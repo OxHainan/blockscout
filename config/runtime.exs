@@ -21,13 +21,12 @@ config :block_scout_web,
   api_url: System.get_env("API_URL"),
   apps_menu: ConfigHelper.parse_bool_env_var("APPS_MENU"),
   apps: System.get_env("APPS") || System.get_env("EXTERNAL_APPS"),
-  gas_price: System.get_env("GAS_PRICE", nil),
+  gas_price: System.get_env("GAS_PRICE"),
   dark_forest_addresses: System.get_env("CUSTOM_CONTRACT_ADDRESSES_DARK_FOREST"),
   dark_forest_addresses_v_0_5: System.get_env("CUSTOM_CONTRACT_ADDRESSES_DARK_FOREST_V_0_5"),
   circles_addresses: System.get_env("CUSTOM_CONTRACT_ADDRESSES_CIRCLES"),
-  test_tokens_addresses: System.get_env("CUSTOM_CONTRACT_ADDRESSES_TEST_TOKEN"),
-  re_captcha_secret_key: System.get_env("RE_CAPTCHA_SECRET_KEY", nil),
-  re_captcha_client_key: System.get_env("RE_CAPTCHA_CLIENT_KEY", nil),
+  re_captcha_secret_key: System.get_env("RE_CAPTCHA_SECRET_KEY"),
+  re_captcha_client_key: System.get_env("RE_CAPTCHA_CLIENT_KEY"),
   new_tags: System.get_env("NEW_TAGS"),
   chain_id: System.get_env("CHAIN_ID"),
   json_rpc: System.get_env("JSON_RPC"),
@@ -85,8 +84,8 @@ config :block_scout_web, :api_rate_limit,
   global_limit: ConfigHelper.parse_integer_env_var("API_RATE_LIMIT", default_api_rate_limit),
   limit_by_key: ConfigHelper.parse_integer_env_var("API_RATE_LIMIT_BY_KEY", default_api_rate_limit),
   limit_by_ip: ConfigHelper.parse_integer_env_var("API_RATE_LIMIT_BY_IP", default_api_rate_limit),
-  static_api_key: System.get_env("API_RATE_LIMIT_STATIC_API_KEY", nil),
-  whitelisted_ips: System.get_env("API_RATE_LIMIT_WHITELISTED_IPS", nil)
+  static_api_key: System.get_env("API_RATE_LIMIT_STATIC_API_KEY"),
+  whitelisted_ips: System.get_env("API_RATE_LIMIT_WHITELISTED_IPS")
 
 # Configures History
 price_chart_config =
@@ -149,8 +148,8 @@ disable_indexer? = ConfigHelper.parse_bool_env_var("DISABLE_INDEXER")
 disable_webapp? = ConfigHelper.parse_bool_env_var("DISABLE_WEBAPP")
 
 config :explorer,
-  coin: System.get_env("COIN", nil) || System.get_env("EXCHANGE_RATES_COIN") || "ETH",
-  coin_name: System.get_env("COIN_NAME", nil) || System.get_env("EXCHANGE_RATES_COIN") || "ETH",
+  coin: System.get_env("COIN") || System.get_env("EXCHANGE_RATES_COIN") || "ETH",
+  coin_name: System.get_env("COIN_NAME") || System.get_env("EXCHANGE_RATES_COIN") || "ETH",
   allowed_evm_versions:
     System.get_env("CONTRACT_VERIFICATION_ALLOWED_EVM_VERSIONS") ||
       "homestead,tangerineWhistle,spuriousDragon,byzantium,constantinople,petersburg,istanbul,berlin,london,default",
@@ -165,8 +164,8 @@ config :explorer,
   avg_block_time_as_ttl_cached_implementation_data_of_proxy: true,
   fallback_ttl_cached_implementation_data_of_proxy: :timer.seconds(4),
   implementation_data_fetching_timeout: :timer.seconds(2),
-  restricted_list: System.get_env("RESTRICTED_LIST", nil),
-  restricted_list_key: System.get_env("RESTRICTED_LIST_KEY", nil),
+  restricted_list: System.get_env("RESTRICTED_LIST"),
+  restricted_list_key: System.get_env("RESTRICTED_LIST_KEY"),
   checksum_function: System.get_env("CHECKSUM_FUNCTION") && String.to_atom(System.get_env("CHECKSUM_FUNCTION"))
 
 config :explorer, Explorer.Chain.Events.Listener,
@@ -187,6 +186,9 @@ config :explorer, Explorer.Chain.Cache.AddressSum, global_ttl: address_sum_globa
 
 config :explorer, Explorer.Chain.Cache.AddressSumMinusBurnt, global_ttl: address_sum_global_ttl
 
+config :explorer, Explorer.Chain.Cache.GasUsage,
+  global_ttl: ConfigHelper.parse_time_env_var("CACHE_TOTAL_GAS_USAGE_PERIOD", "2h")
+
 config :explorer, Explorer.Chain.Cache.Block,
   global_ttl: ConfigHelper.parse_time_env_var("CACHE_BLOCK_COUNT_PERIOD", "2h")
 
@@ -194,7 +196,33 @@ config :explorer, Explorer.Chain.Cache.Transaction,
   global_ttl: ConfigHelper.parse_time_env_var("CACHE_TXS_COUNT_PERIOD", "2h")
 
 config :explorer, Explorer.Chain.Cache.GasPriceOracle,
-  global_ttl: ConfigHelper.parse_time_env_var("GAS_PRICE_ORACLE_CACHE_PERIOD", 30)
+  global_ttl: ConfigHelper.parse_time_env_var("GAS_PRICE_ORACLE_CACHE_PERIOD", "30s")
+
+config :explorer, Explorer.Counters.AddressTransactionsGasUsageCounter,
+  cache_period: ConfigHelper.parse_time_env_var("CACHE_ADDRESS_TRANSACTIONS_GAS_USAGE_COUNTER_PERIOD", "30m")
+
+config :explorer, Explorer.Counters.TokenHoldersCounter,
+  cache_period: ConfigHelper.parse_time_env_var("CACHE_TOKEN_HOLDERS_COUNTER_PERIOD", "1h")
+
+config :explorer, Explorer.Counters.TokenTransfersCounter,
+  cache_period: ConfigHelper.parse_time_env_var("CACHE_TOKEN_TRANSFERS_COUNTER_PERIOD", "1h")
+
+config :explorer, Explorer.Counters.AverageBlockTime,
+  enabled: true,
+  period: :timer.minutes(10),
+  cache_period: ConfigHelper.parse_time_env_var("CACHE_AVERAGE_BLOCK_PERIOD", "30m")
+
+config :explorer, Explorer.Market.MarketHistoryCache,
+  cache_period: ConfigHelper.parse_time_env_var("CACHE_MARKET_HISTORY_PERIOD", "6h")
+
+config :explorer, Explorer.Counters.AddressTransactionsCounter,
+  cache_period: ConfigHelper.parse_time_env_var("CACHE_ADDRESS_TRANSACTIONS_COUNTER_PERIOD", "1h")
+
+config :explorer, Explorer.Counters.AddressTokenUsdSum,
+  cache_period: ConfigHelper.parse_time_env_var("CACHE_ADDRESS_TOKENS_USD_SUM_PERIOD", "1h")
+
+config :explorer, Explorer.Counters.AddressTokenTransfersCounter,
+  cache_period: ConfigHelper.parse_time_env_var("CACHE_ADDRESS_TOKEN_TRANSFERS_COUNTER_PERIOD", "1h")
 
 config :explorer, Explorer.ExchangeRates,
   store: :ets,
@@ -213,7 +241,7 @@ config :explorer, Explorer.ExchangeRates.Source.CoinGecko,
 
 config :explorer, Explorer.ExchangeRates.TokenExchangeRates,
   enabled: !ConfigHelper.parse_bool_env_var("DISABLE_TOKEN_EXCHANGE_RATE", "true"),
-  interval: ConfigHelper.parse_time_env_var("TOKEN_EXCHANGE_RATE_INTERVAL", nil),
+  interval: ConfigHelper.parse_time_env_var("TOKEN_EXCHANGE_RATE_INTERVAL", "5s"),
   refetch_interval: ConfigHelper.parse_time_env_var("TOKEN_EXCHANGE_RATE_REFETCH_INTERVAL", nil),
   max_batch_size: ConfigHelper.parse_integer_env_var("TOKEN_EXCHANGE_RATE_MAX_BATCH_SIZE", 150)
 
@@ -221,7 +249,7 @@ config :explorer, Explorer.Market.History.Cataloger, enabled: !disable_indexer?
 
 config :explorer, Explorer.Chain.Transaction.History.Historian,
   enabled: ConfigHelper.parse_bool_env_var("ENABLE_TXS_STATS", "true"),
-  init_lag_milliseconds: ConfigHelper.parse_time_env_var("TXS_HISTORIAN_INIT_LAG", 0),
+  init_lag_milliseconds: ConfigHelper.parse_time_env_var("TXS_HISTORIAN_INIT_LAG", "0"),
   days_to_compile_at_init: ConfigHelper.parse_integer_env_var("TXS_STATS_DAYS_TO_COMPILE_AT_INIT", 40)
 
 config :explorer, Explorer.History.Process,
@@ -350,11 +378,11 @@ config :indexer, Indexer.Fetcher.PendingTransaction.Supervisor,
       ConfigHelper.parse_bool_env_var("INDEXER_DISABLE_PENDING_TRANSACTIONS_FETCHER")
 
 config :indexer, Indexer.Fetcher.TokenBalanceOnDemand,
-  threshold: ConfigHelper.parse_integer_env_var("TOKEN_BALANCE_ON_DEMAND_FETCHER_THRESHOLD_MINUTES", 60),
+  threshold: ConfigHelper.parse_time_env_var("TOKEN_BALANCE_ON_DEMAND_FETCHER_THRESHOLD", "1h"),
   fallback_threshold_in_blocks: 500
 
 config :indexer, Indexer.Fetcher.CoinBalanceOnDemand,
-  threshold: ConfigHelper.parse_integer_env_var("COIN_BALANCE_ON_DEMAND_FETCHER_THRESHOLD_MINUTES", 60),
+  threshold: ConfigHelper.parse_time_env_var("COIN_BALANCE_ON_DEMAND_FETCHER_THRESHOLD", "1h"),
   fallback_threshold_in_blocks: 500
 
 config :indexer, Indexer.Fetcher.BlockReward.Supervisor,

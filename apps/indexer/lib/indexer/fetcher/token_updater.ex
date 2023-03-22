@@ -10,6 +10,7 @@ defmodule Indexer.Fetcher.TokenUpdater do
   alias Explorer.Chain.{Hash, Token}
   alias Explorer.Token.MetadataRetriever
   alias Indexer.BufferedTask
+  alias Timex.Duration
 
   @behaviour BufferedTask
 
@@ -49,6 +50,7 @@ defmodule Indexer.Fetcher.TokenUpdater do
       metadata_updater_milliseconds_interval
       |> Duration.from_milliseconds()
       |> Duration.to_minutes()
+      |> trunc()
 
     {:ok, tokens} = Chain.stream_cataloged_token_contract_address_hashes(initial, reducer, interval_in_minutes)
 
