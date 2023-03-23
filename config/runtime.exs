@@ -32,7 +32,10 @@ config :block_scout_web,
   json_rpc: System.get_env("JSON_RPC"),
   disable_add_to_mm_button: ConfigHelper.parse_bool_env_var("DISABLE_ADD_TO_MM_BUTTON"),
   permanent_dark_mode_enabled: ConfigHelper.parse_bool_env_var("DISABLE_ADD_TO_MM_BUTTON"),
-  permanent_light_mode_enabled: ConfigHelper.parse_bool_env_var("PERMANENT_LIGHT_MODE_ENABLED")
+  permanent_light_mode_enabled: ConfigHelper.parse_bool_env_var("PERMANENT_LIGHT_MODE_ENABLED"),
+  display_token_icons: ConfigHelper.parse_bool_env_var("DISPLAY_TOKEN_ICONS"),
+  hide_block_miner: ConfigHelper.parse_bool_env_var("HIDE_BLOCK_MINER"),
+  show_tenderly_link: ConfigHelper.parse_bool_env_var("SHOW_TENDERLY_LINK")
 
 network_path =
   "NETWORK_PATH"
@@ -196,7 +199,11 @@ config :explorer, Explorer.Chain.Cache.Transaction,
   global_ttl: ConfigHelper.parse_time_env_var("CACHE_TXS_COUNT_PERIOD", "2h")
 
 config :explorer, Explorer.Chain.Cache.GasPriceOracle,
-  global_ttl: ConfigHelper.parse_time_env_var("GAS_PRICE_ORACLE_CACHE_PERIOD", "30s")
+  global_ttl: ConfigHelper.parse_time_env_var("GAS_PRICE_ORACLE_CACHE_PERIOD", "30s"),
+  num_of_blocks: ConfigHelper.parse_integer_env_var("GAS_PRICE_ORACLE_NUM_OF_BLOCKS", 200),
+  safelow_percentile: ConfigHelper.parse_integer_env_var("GAS_PRICE_ORACLE_SAFELOW_PERCENTILE", 35),
+  average_percentile: ConfigHelper.parse_integer_env_var("GAS_PRICE_ORACLE_AVERAGE_PERCENTILE", 60),
+  fast_percentile: ConfigHelper.parse_integer_env_var("GAS_PRICE_ORACLE_FAST_PERCENTILE", 90)
 
 config :explorer, Explorer.Counters.AddressTransactionsGasUsageCounter,
   cache_period: ConfigHelper.parse_time_env_var("CACHE_ADDRESS_TRANSACTIONS_GAS_USAGE_COUNTER_PERIOD", "30m")
@@ -341,6 +348,12 @@ config :explorer, :token_id_migration,
 
 config :explorer, Explorer.Chain.Cache.MinMissingBlockNumber,
   batch_size: ConfigHelper.parse_integer_env_var("MIN_MISSING_BLOCK_NUMBER_BATCH_SIZE", 100_000)
+
+config :explorer, :spandex,
+  batch_size: ConfigHelper.parse_integer_env_var("SPANDEX_BATCH_SIZE", 100),
+  sync_threshold: ConfigHelper.parse_integer_env_var("SPANDEX_SYNC_THRESHOLD", 100)
+
+config :explorer, :datadog, port: ConfigHelper.parse_integer_env_var("DATADOG_PORT", 8126)
 
 ###############
 ### Indexer ###

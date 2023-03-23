@@ -27,7 +27,7 @@
                     id="token-icon"
                     data-chain-id="<%= Application.get_env(:block_scout_web, :chain_id) %>"
                     data-address-hash="<%= Address.checksum(@token.contract_address_hash) %>"
-                    data-display-token-icons="<%= System.get_env("DISPLAY_TOKEN_ICONS") %>">
+                    data-display-token-icons="<%= Application.get_env(:block_scout_web, :display_token_icons) %>">
                   </span>
                   <div class="title-with-label"><%= @token.name %></div>
               <% else %>

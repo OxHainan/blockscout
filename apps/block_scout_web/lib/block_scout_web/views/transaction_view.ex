@@ -555,7 +555,7 @@ defmodule BlockScoutWeb.TransactionView do
   end
 
   defp show_tenderly_link? do
-    System.get_env("SHOW_TENDERLY_LINK") == "true"
+    Application.get_env(:block_scout_web, :show_tenderly_link)
   end
 
   defp tenderly_chain_path do
